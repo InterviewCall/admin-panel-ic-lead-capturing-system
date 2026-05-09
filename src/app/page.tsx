@@ -1,65 +1,105 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { FC } from 'react';
 
-export default function Home() {
+const HomePage: FC = () => {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen bg-[radial-gradient(circle_at_10%_10%,rgba(37,99,235,0.10),transparent_32%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-4 py-8 text-(--builder-text) max-sm:px-3">
+      <div className="mx-auto w-[min(1180px,92%)]">
+        <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="text-[22px] font-black tracking-[-0.5px] text-[#020617]">
+              Interview
+              <span className="text-(--builder-blue)">Call</span>
+            </div>
+
+            <p className="mt-1 text-sm font-bold text-(--builder-muted)">
+              Internal admin workspace
+            </p>
+          </div>
+
+          <div className="rounded-full bg-[#dcfce7] px-4 py-2 text-sm font-black text-[#166534]">
+            Admin Panel
+          </div>
+        </header>
+
+        <section className="mb-8 overflow-hidden rounded-3xl bg-[linear-gradient(135deg,#1d4ed8,#0f172a)] p-8 text-white shadow-(--builder-shadow) max-sm:p-6">
+          <div className="mb-3 inline-flex rounded-full bg-white/15 px-3.5 py-2 text-xs font-black text-[#dbeafe]">
+            Candidate Form System
+          </div>
+
+          <h1 className="max-w-4xl text-[clamp(34px,5vw,58px)] font-black leading-[1.05] tracking-[-1.4px]">
+            Manage qualification forms, questions, and lead capture flows.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p className="mt-4 max-w-3xl text-base font-semibold leading-7 text-[#dbeafe]">
+            Create dynamic forms for different lead segments, collect candidate
+            answers, and prepare submissions for the booking flow.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        </section>
+
+        <section className="grid grid-cols-3 gap-5 max-lg:grid-cols-1">
+          <Link
+            href="/form-builder"
+            className="group rounded-3xl border border-(--builder-border) bg-white p-6 shadow-(--builder-shadow) transition duration-200 hover:-translate-y-1 hover:border-(--builder-blue) hover:shadow-[0_28px_80px_rgba(15,23,42,0.14)]"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#eff6ff] text-2xl">
+              🧩
+            </div>
+
+            <h2 className="text-xl font-black tracking-[-0.3px] text-[#020617]">
+              Form Builder
+            </h2>
+
+            <p className="mt-2 text-sm font-semibold leading-6 text-(--builder-muted)">
+              Create qualification forms, add step-wise questions, and preview
+              the final payload.
+            </p>
+
+            <div className="mt-5 text-sm font-black text-(--builder-blue) transition group-hover:translate-x-1">
+              Open Builder →
+            </div>
+          </Link>
+
+          <div className="rounded-3xl border border-(--builder-border) bg-white p-6 shadow-(--builder-shadow)">
+            <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#f1f5f9] text-2xl">
+              👥
+            </div>
+
+            <h2 className="text-xl font-black tracking-[-0.3px] text-[#020617]">
+              Candidate Submissions
+            </h2>
+
+            <p className="mt-2 text-sm font-semibold leading-6 text-(--builder-muted)">
+              View submitted leads and candidate answers after backend
+              integration.
+            </p>
+
+            <div className="mt-5 inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-sm font-black text-(--builder-muted-light)">
+              Coming Soon
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-(--builder-border) bg-white p-6 shadow-(--builder-shadow)">
+            <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#f1f5f9] text-2xl">
+              📅
+            </div>
+
+            <h2 className="text-xl font-black tracking-[-0.3px] text-[#020617]">
+              Booking Slots
+            </h2>
+
+            <p className="mt-2 text-sm font-semibold leading-6 text-(--builder-muted)">
+              Manage advisor availability, dates, and time slots later.
+            </p>
+
+            <div className="mt-5 inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-sm font-black text-(--builder-muted-light)">
+              Coming Soon
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
   );
-}
+};
+
+export default HomePage;
