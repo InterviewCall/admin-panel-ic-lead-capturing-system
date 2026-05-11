@@ -6,6 +6,7 @@ import FormDetailsCard from '@/components/form-builder/FormDetailsCard';
 import QuestionBuilderCard from '@/components/form-builder/QuestionBuilderCard';
 import QuestionListCard from '@/components/form-builder/QuestionListCard';
 import QuestionPreviewCard from '@/components/form-builder/QuestionPreviewCard';
+import { useAppSelector } from '@/lib/hooks';
 import { FormDetailsValues } from '@/schemas/formBuilderSchema';
 import { FormQuestion, QualificationFormDraft } from '@/types/formBuilder';
 
@@ -25,6 +26,16 @@ const FormBuilder: FC = () => {
 
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
 
+  const createdFormId = useAppSelector(
+    (state) => state.formBuilder.createdFormId,
+  );
+
+  const createdFormSlug = useAppSelector(
+    (state) => state.formBuilder.createdFormSlug,
+  );
+
+  const isFormSaved = Boolean(createdFormId);
+
   const draft: QualificationFormDraft = useMemo(
     () => ({
       ...formDetails,
@@ -43,6 +54,10 @@ const FormBuilder: FC = () => {
   const totalStepsUsed = useMemo(() => {
     return new Set(questions.map((question) => question.stepNo)).size;
   }, [questions]);
+
+  const saveFormDetails = (values: FormDetailsValues): void => {
+    setFormDetails(values);
+  };
 
   const addQuestion = (question: FormQuestion): void => {
     setQuestions((previousQuestions) => [...previousQuestions, question]);
@@ -70,15 +85,22 @@ const FormBuilder: FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-full bg-[#eff6ff] px-4 py-2 text-sm font-black text-(--builder-blue-dark)">
-              Draft Mode
-            </div>
+            {isFormSaved ? (
+              <div className="rounded-full bg-[#dcfce7] px-4 py-2 text-sm font-black text-[#166534]">
+                Form Saved · ID #{createdFormId}
+              </div>
+            ) : (
+              <div className="rounded-full bg-[#eff6ff] px-4 py-2 text-sm font-black text-(--builder-blue-dark)">
+                Draft Mode
+              </div>
+            )}
 
             <button
               type="button"
-              className="btn btn-primary min-h-11 rounded-full px-5 font-black text-white"
+              disabled={!isFormSaved}
+              className="btn btn-primary min-h-11 rounded-full px-5 font-black text-white disabled:pointer-events-none disabled:opacity-60"
             >
-              Save Draft
+              {isFormSaved ? 'Form Ready' : 'Save Form First'}
             </button>
           </div>
         </header>
@@ -98,6 +120,12 @@ const FormBuilder: FC = () => {
                 Create form identity, add step-wise questions, attach answer
                 options, and preview the final payload before connecting APIs.
               </p>
+
+              {isFormSaved && createdFormSlug && (
+                <div className="mt-5 inline-flex rounded-full bg-white/15 px-4 py-2 text-sm font-black text-[#dbeafe]">
+                  Active Form: {createdFormSlug}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-3 max-sm:grid-cols-1">
@@ -113,14 +141,14 @@ const FormBuilder: FC = () => {
             step="01"
             title="Form Identity"
             description="Name, slug, segment key, and active version."
-            active
+            active={isFormSaved}
           />
 
           <ProcessCard
             step="02"
             title="Questions"
             description="Create input, radio, select, checkbox, and text areas."
-            active
+            active={isFormSaved}
           />
 
           <ProcessCard
@@ -132,8 +160,9 @@ const FormBuilder: FC = () => {
 
           <ProcessCard
             step="04"
-            title="API Connect"
-            description="Connect create/update APIs after backend is ready."
+            title="Candidate Ready"
+            description="Once questions are added, the form can be fetched by candidate pages."
+            active={isFormSaved && questions.length > 0}
           />
         </section>
 
@@ -141,10 +170,21 @@ const FormBuilder: FC = () => {
           <div className="grid gap-6">
             <FormDetailsCard
               defaultValues={formDetails}
-              onSave={setFormDetails}
+              onSave={saveFormDetails}
             />
 
-            <QuestionBuilderCard onAddQuestion={addQuestion} />
+            {!isFormSaved && (
+              <div className="alert alert-info rounded-3xl border border-[#bfdbfe] bg-[#eff6ff] text-sm font-bold text-(--builder-blue-dark)">
+                Save the qualification form first. After the backend returns a
+                form ID, you can start adding questions to this form.
+              </div>
+            )}
+
+            <QuestionBuilderCard
+              formId={createdFormId}
+              disabled={!isFormSaved}
+              onAddQuestion={addQuestion}
+            />
 
             <QuestionListCard
               questions={questions}
