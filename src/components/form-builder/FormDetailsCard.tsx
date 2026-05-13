@@ -145,6 +145,36 @@ const FormDetailsCard: FC<FormDetailsCardProps> = ({
 
         <div>
           <label className="mb-2 block text-sm font-black text-[#334155]">
+            Title *
+          </label>
+
+          <textarea
+            {...register('title')}
+            className="textarea textarea-bordered textarea-primary min-h-24 w-full rounded-[13px] bg-white text-base disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-500"
+            placeholder="Let’s check whether your current skillset is strong enough for the AI era."
+            disabled={isPending}
+          />
+
+          <FieldErrorMessage message={errors.title?.message} />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-black text-[#334155]">
+            Sub Title *
+          </label>
+
+          <textarea
+            {...register('subTitle')}
+            className="textarea textarea-bordered textarea-primary min-h-28 w-full rounded-[13px] bg-white text-base disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-500"
+            placeholder="Answer a few questions so our team can understand your current engineering stage..."
+            disabled={isPending}
+          />
+
+          <FieldErrorMessage message={errors.subTitle?.message} />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-black text-[#334155]">
             Description
           </label>
 
@@ -154,6 +184,8 @@ const FormDetailsCard: FC<FormDetailsCardProps> = ({
             placeholder="Short internal description of this form..."
             disabled={isPending}
           />
+
+          <FieldErrorMessage message={errors.description?.message} />
         </div>
 
         <label className="flex cursor-pointer items-center gap-3">

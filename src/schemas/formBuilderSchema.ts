@@ -16,6 +16,9 @@ export const formDetailsSchema = z.object({
       /^[a-z0-9_]+$/,
       'Segment key should use lowercase letters, numbers, and underscores only.',
     ),
+
+  title: z.string().trim().max(3000, 'title is too long'),
+  subTitle: z.string().trim().max(3000, 'subTitle is too long'),
   description: z.string().optional(),
   version: z.number().min(1, 'Version must be at least 1.'),
   isActive: z.boolean(),
@@ -107,15 +110,9 @@ export const questionSchema = z
       .optional()
       .nullable(),
 
-    minValue: z
-      .number()
-      .optional()
-      .nullable(),
+    minValue: z.number().optional().nullable(),
 
-    maxValue: z
-      .number()
-      .optional()
-      .nullable(),
+    maxValue: z.number().optional().nullable(),
   })
   .superRefine((data, ctx) => {
     if (
@@ -128,7 +125,8 @@ export const questionSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['maxLength'],
-        message: 'Maximum characters must be greater than or equal to minimum characters.',
+        message:
+          'Maximum characters must be greater than or equal to minimum characters.',
       });
     }
 
@@ -142,7 +140,8 @@ export const questionSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['maxValue'],
-        message: 'Maximum value must be greater than or equal to minimum value.',
+        message:
+          'Maximum value must be greater than or equal to minimum value.',
       });
     }
   });

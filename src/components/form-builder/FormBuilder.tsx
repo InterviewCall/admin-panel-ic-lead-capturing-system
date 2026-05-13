@@ -14,6 +14,8 @@ const initialFormDetails: FormDetailsValues = {
   name: 'AI-Proof Engineer Readiness Check',
   slug: 'ai-proof-engineer-readiness-check',
   segmentKey: 'ai_fear',
+  title: 'Let’s check whether your current skillset is strong enough for the AI era.',
+  subTitle: 'Answer a few questions so our team can understand your current engineering stage, AI-readiness, and whether the AI-Proof Engineer Program is the right fit for you.',
   description:
     'Lead qualification form for engineers worried about AI and career growth.',
   version: 1,
