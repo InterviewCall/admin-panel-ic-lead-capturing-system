@@ -60,8 +60,11 @@ const HomePage: FC = () => {
             </div>
           </Link>
 
-          <div className="rounded-3xl border border-(--builder-border) bg-white p-6 shadow-(--builder-shadow)">
-            <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#f1f5f9] text-2xl">
+          <Link
+            href="/submissions"
+            className="group rounded-3xl border border-(--builder-border) bg-white p-6 shadow-(--builder-shadow) transition duration-200 hover:-translate-y-1 hover:border-(--builder-blue) hover:shadow-[0_28px_80px_rgba(15,23,42,0.14)]"
+          >
+            <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#eff6ff] text-2xl">
               👥
             </div>
 
@@ -70,32 +73,34 @@ const HomePage: FC = () => {
             </h2>
 
             <p className="mt-2 text-sm font-semibold leading-6 text-(--builder-muted)">
-              View submitted leads and candidate answers after backend
-              integration.
+              View submitted leads, lead scores, candidate answers and booking status.
             </p>
 
-            <div className="mt-5 inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-sm font-black text-(--builder-muted-light)">
-              Coming Soon
+            <div className="mt-5 text-sm font-black text-(--builder-blue) transition group-hover:translate-x-1">
+              Open Submissions →
             </div>
-          </div>
+          </Link>
 
-          <div className="rounded-3xl border border-(--builder-border) bg-white p-6 shadow-(--builder-shadow)">
-            <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#f1f5f9] text-2xl">
+          <Link
+            href="/bookings"
+            className="group rounded-3xl border border-(--builder-border) bg-white p-6 shadow-(--builder-shadow) transition duration-200 hover:-translate-y-1 hover:border-(--builder-blue) hover:shadow-[0_28px_80px_rgba(15,23,42,0.14)]"
+          >
+            <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#eff6ff] text-2xl">
               📅
             </div>
 
             <h2 className="text-xl font-black tracking-[-0.3px] text-[#020617]">
-              Booking Slots
+              Bookings
             </h2>
 
             <p className="mt-2 text-sm font-semibold leading-6 text-(--builder-muted)">
-              Manage advisor availability, dates, and time slots later.
+              See booked counselling calls, message delivery, and how full the week is.
             </p>
 
-            <div className="mt-5 inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-sm font-black text-(--builder-muted-light)">
-              Coming Soon
+            <div className="mt-5 text-sm font-black text-(--builder-blue) transition group-hover:translate-x-1">
+              Open Bookings →
             </div>
-          </div>
+          </Link>
         </section>
       </div>
     </main>
