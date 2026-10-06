@@ -24,3 +24,11 @@ export type AddQuestionToFormResponse = {
     };
     error?: Record<string, unknown>;
 };
+
+// Envelope every candidate-form-details-service endpoint returns on success.
+export type ApiSuccessResponse<T> = {
+    success: boolean;
+    message: string;
+    data: T;
+    error: unknown;
+};

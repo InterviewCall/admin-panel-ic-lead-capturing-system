@@ -49,7 +49,9 @@ const BookingsAgenda: FC<BookingsAgendaProps> = ({ days, bookings, selectedId, o
     <>
       {visibleDays.map((day) => {
         const dayBookings = bookings.filter((booking) => toYmd(booking.slotStartAt) === day.date);
-        const confirmed = dayBookings.filter((booking) => booking.status === 'confirmed').length;
+        // A call marked as done is still a confirmed booking.
+        const done = dayBookings.filter((booking) => booking.status === 'completed').length;
+        const confirmed = dayBookings.filter((booking) => booking.status === 'confirmed').length + done;
         const held = dayBookings.filter((booking) => booking.status === 'initiated').length;
         const openSlots = day.slots.filter(
           (slot) => slot.status === 'available' && new Date(slot.slotStartAt).getTime() > now,
@@ -63,7 +65,7 @@ const BookingsAgenda: FC<BookingsAgendaProps> = ({ days, bookings, selectedId, o
                 {formatLongDay(day.date)}
               </h2>
               <div className="text-[13px] font-bold text-(--builder-muted)">
-                {confirmed} confirmed{held > 0 ? `, ${held} held` : ''}
+                {confirmed} confirmed{done > 0 ? `, ${done} done` : ''}{held > 0 ? `, ${held} held` : ''}
               </div>
             </div>
 

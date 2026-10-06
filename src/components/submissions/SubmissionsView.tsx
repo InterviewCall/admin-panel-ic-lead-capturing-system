@@ -1,11 +1,12 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import Card from '@/components/ui/Card';
 import { LoadingBlock, MessageBlock } from '@/components/ui/PageState';
 import StatCard from '@/components/ui/StatCard';
-import { DEFAULT_PAGE_SIZE, HOT_SCORE_THRESHOLD } from '@/constants/adminStatus';
+import { HOT_SCORE_THRESHOLD } from '@/constants/adminStatus';
+import { useSubmissionFilters } from '@/hooks/submissions/useSubmissionFilters';
 import { useSubmissions } from '@/hooks/submissions/useSubmissions';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { SubmissionFilters } from '@/types/submission';
@@ -15,29 +16,36 @@ import SubmissionFiltersBar from './SubmissionFiltersBar';
 import SubmissionsTable from './SubmissionsTable';
 import SubmissionStatusTabs from './SubmissionStatusTabs';
 
-const DEFAULT_FILTERS: SubmissionFilters = {
-  status: 'all',
-  temperature: 'all',
-  formSlug: 'all',
-  source: 'all',
-  range: '7d',
-  search: '',
-  page: 1,
-  pageSize: DEFAULT_PAGE_SIZE,
-};
-
 const SubmissionsView: FC = () => {
-  const [filters, setFilters] = useState<SubmissionFilters>(DEFAULT_FILTERS);
-  const debouncedSearch = useDebouncedValue(filters.search, 300);
+  const { filters, updateFilters } = useSubmissionFilters();
 
-  const { data, isPending, isError, isFetching, refetch } = useSubmissions({
-    ...filters,
-    search: debouncedSearch,
-  });
+  // The search box keeps its own text so typing stays instant; the URL (and the request) follow 300ms later.
+  const [searchText, setSearchText] = useState(filters.search);
+  const [syncedUrlSearch, setSyncedUrlSearch] = useState(filters.search);
+  if (filters.search !== syncedUrlSearch) {
+    // The URL changed from outside (Back button, pasted link), so show that text in the box.
+    setSyncedUrlSearch(filters.search);
+    setSearchText(filters.search);
+  }
 
-  // Any filter change goes back to the first page.
-  const updateFilters = (patch: Partial<SubmissionFilters>) => {
-    setFilters((current) => ({ ...current, page: 1, ...patch }));
+  const debouncedSearch = useDebouncedValue(searchText, 300);
+
+  useEffect(() => {
+    if (debouncedSearch === searchText && debouncedSearch.trim() !== filters.search) {
+      updateFilters({ search: debouncedSearch });
+    }
+  }, [debouncedSearch, searchText, filters.search, updateFilters]);
+
+  const { data, isPending, isError, error, isFetching, refetch } = useSubmissions(filters);
+
+  const handleFilterChange = (patch: Partial<SubmissionFilters>) => {
+    if (patch.search !== undefined) {
+      setSearchText(patch.search);
+      return;
+    }
+
+    // Carry along any search text still waiting for its 300ms, so changing a filter does not drop it.
+    updateFilters({ ...patch, search: searchText });
   };
 
   const handleExport = () => {
@@ -125,17 +133,24 @@ const SubmissionsView: FC = () => {
               cancelled: 0,
             }
           }
-          onChange={(status) => updateFilters({ status })}
+          onChange={(status) => handleFilterChange({ status })}
         />
 
-        <SubmissionFiltersBar filters={filters} sources={data?.availableSources ?? []} onChange={updateFilters} />
+        <SubmissionFiltersBar
+          filters={{ ...filters, search: searchText }}
+          sources={data?.availableSources ?? []}
+          onChange={handleFilterChange}
+        />
 
         {isPending && <LoadingBlock label="Loading submissions..." />}
 
         {isError && (
           <MessageBlock
             title="Could not load submissions"
-            description="Something went wrong while fetching the list."
+            description={
+              error?.response?.data?.message ??
+              (error?.response ? 'Something went wrong while fetching the list.' : 'Could not reach the server. Check that the candidate service is running.')
+            }
             action={
               <button
                 type="button"
@@ -152,6 +167,12 @@ const SubmissionsView: FC = () => {
           <MessageBlock title="No submissions match these filters" description="Try a different status, date range or search." />
         )}
 
+        {data?.warnings && data.warnings.length > 0 && (
+          <div role="status" className="mx-5 mb-3 rounded-2xl bg-orange-50 px-3.5 py-2.5 text-[13px] font-bold text-orange-800">
+            Booking details are temporarily unavailable, so the Booked call column may be incomplete. Try again in a moment.
+          </div>
+        )}
+
         {data && data.items.length > 0 && <SubmissionsTable items={data.items} />}
 
         {data && (
@@ -163,7 +184,7 @@ const SubmissionsView: FC = () => {
               <button
                 type="button"
                 disabled={data.page <= 1}
-                onClick={() => setFilters((current) => ({ ...current, page: current.page - 1 }))}
+                onClick={() => updateFilters({ page: filters.page - 1 })}
                 className="min-h-11 cursor-pointer rounded-xl border border-slate-300 bg-white px-4 font-bold text-(--builder-text) disabled:cursor-not-allowed disabled:text-slate-400"
               >
                 Previous
@@ -171,7 +192,7 @@ const SubmissionsView: FC = () => {
               <button
                 type="button"
                 disabled={!hasNextPage}
-                onClick={() => setFilters((current) => ({ ...current, page: current.page + 1 }))}
+                onClick={() => updateFilters({ page: filters.page + 1 })}
                 className="min-h-11 cursor-pointer rounded-xl border border-slate-300 bg-white px-4 font-bold text-(--builder-text) disabled:cursor-not-allowed disabled:text-slate-400"
               >
                 Next

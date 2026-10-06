@@ -1,10 +1,12 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 
 import { getSubmissionsApi } from '@/services/submissionsApi';
-import { SubmissionFilters } from '@/types/submission';
+import { ApiErrorResponse } from '@/types/response';
+import { SubmissionFilters, SubmissionsListResponse } from '@/types/submission';
 
 export function useSubmissions(filters: SubmissionFilters) {
-    return useQuery({
+    return useQuery<SubmissionsListResponse, AxiosError<ApiErrorResponse>>({
         queryKey: ['submissions', filters],
         queryFn: () => getSubmissionsApi(filters),
         placeholderData: keepPreviousData,

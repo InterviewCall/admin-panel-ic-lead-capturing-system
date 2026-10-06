@@ -35,6 +35,7 @@ export const BOOKING_STATUS_META: Record<BookingStatus, { label: string; classNa
     confirmed: { label: 'Confirmed', className: 'bg-green-100 text-green-800' },
     initiated: { label: 'Slot held', className: 'bg-amber-100 text-amber-800' },
     cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-800' },
+    completed: { label: 'Completed', className: 'bg-blue-100 text-blue-800' },
 };
 
 export const SLOT_STATUS_META: Record<SlotStatus, { label: string; className: string }> = {

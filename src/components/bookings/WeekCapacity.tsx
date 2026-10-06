@@ -7,7 +7,7 @@ import Card from '@/components/ui/Card';
 import { SLOT_STATUS_META } from '@/constants/adminStatus';
 import { useSetSlotBlocked } from '@/hooks/bookings/useSetSlotBlocked';
 import { useNow } from '@/hooks/useNow';
-import { WeekDay } from '@/types/booking';
+import { WeekDay, WeekSlot } from '@/types/booking';
 import { formatDayHeader, formatTime } from '@/utils/helpers/dateFormat';
 
 type WeekCapacityProps = {
@@ -16,10 +16,31 @@ type WeekCapacityProps = {
 
 const LEGEND = ['available', 'booked', 'reserved', 'blocked'] as const;
 
+const IST_OFFSET_MINUTES = 330;
+
+// Minutes since midnight in IST: the row a slot belongs to, whatever the date.
+function getIstMinutes(slotStartAt: string): number {
+  const date = new Date(slotStartAt);
+  return (date.getUTCHours() * 60 + date.getUTCMinutes() + IST_OFFSET_MINUTES) % (24 * 60);
+}
+
+// Rows are the times of day that exist on any day of the week. A day without that slot (or without any slots) just has a gap.
+function buildRows(days: WeekDay[]): { minutes: number; label: string }[] {
+  const rows = new Map<number, string>();
+
+  for (const day of days) {
+    for (const slot of day.slots) {
+      rows.set(getIstMinutes(slot.slotStartAt), formatTime(slot.slotStartAt));
+    }
+  }
+
+  return Array.from(rows, ([minutes, label]) => ({ minutes, label })).sort((a, b) => a.minutes - b.minutes);
+}
+
 const WeekCapacity: FC<WeekCapacityProps> = ({ days }) => {
   const { mutate: setSlotBlocked, isPending } = useSetSlotBlocked();
   const now = useNow();
-  const rowCount = days[0]?.slots.length ?? 0;
+  const rows = buildRows(days);
 
   return (
     <Card className="p-5.5">
@@ -36,14 +57,17 @@ const WeekCapacity: FC<WeekCapacityProps> = ({ days }) => {
           </div>
         ))}
 
-        {Array.from({ length: rowCount }, (_, rowIndex) => (
-          <div key={rowIndex} className="contents">
-            <div className="text-[11px] font-bold text-(--builder-muted-light)">
-              {formatTime(days[0].slots[rowIndex].slotStartAt)}
-            </div>
+        {rows.map((row) => (
+          <div key={row.minutes} className="contents">
+            <div className="text-[11px] font-bold text-(--builder-muted-light)">{row.label}</div>
 
             {days.map((day) => {
-              const slot = day.slots[rowIndex];
+              const slot: WeekSlot | undefined = day.slots.find((entry) => getIstMinutes(entry.slotStartAt) === row.minutes);
+
+              if (!slot) {
+                return <div key={day.date} aria-hidden="true" className="h-6 rounded-md border border-dashed border-slate-200" />;
+              }
+
               const meta = SLOT_STATUS_META[slot.status];
               const isPastSlot = new Date(slot.slotStartAt).getTime() <= now;
               const canToggle = !isPastSlot && (slot.status === 'available' || slot.status === 'blocked');
@@ -68,6 +92,10 @@ const WeekCapacity: FC<WeekCapacityProps> = ({ days }) => {
           </div>
         ))}
       </div>
+
+      {rows.length === 0 && (
+        <p className="py-3 text-center text-[13px] font-semibold text-(--builder-muted)">No slots are set up for this week.</p>
+      )}
 
       <div className="mt-3.5 flex flex-wrap gap-3 text-xs font-bold text-(--builder-muted)">
         {LEGEND.map((key) => (

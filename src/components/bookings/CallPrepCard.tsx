@@ -7,17 +7,23 @@ import Card from '@/components/ui/Card';
 import Pill from '@/components/ui/Pill';
 import { BOOKING_STATUS_META, TEMPERATURE_META } from '@/constants/adminStatus';
 import { useCancelBooking } from '@/hooks/bookings/useCancelBooking';
+import { useCompleteBooking, useUndoCompleteBooking } from '@/hooks/bookings/useCompleteBooking';
+import { useNow } from '@/hooks/useNow';
 import { BookingListItem } from '@/types/booking';
 import { toTelLink } from '@/utils/helpers/contactLinks';
-import { formatSlot } from '@/utils/helpers/dateFormat';
+import { formatDayTime, formatSlot } from '@/utils/helpers/dateFormat';
 
 type CallPrepCardProps = {
   booking: BookingListItem | null;
 };
 
 const CallPrepCard: FC<CallPrepCardProps> = ({ booking }) => {
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  const { mutate: cancelBooking, isPending } = useCancelBooking();
+  // Which button of which booking is waiting for its "Are you sure?" click.
+  const [confirming, setConfirming] = useState<{ id: string; action: 'cancel' | 'done' } | null>(null);
+  const now = useNow();
+  const { mutate: cancelBooking, isPending: isCancelling } = useCancelBooking();
+  const { mutate: completeBooking, isPending: isCompleting } = useCompleteBooking();
+  const { mutate: undoComplete, isPending: isReopening } = useUndoCompleteBooking();
 
   if (!booking) {
     return (
@@ -30,7 +36,10 @@ const CallPrepCard: FC<CallPrepCardProps> = ({ booking }) => {
 
   const temperature = booking.leadTemperature ? TEMPERATURE_META[booking.leadTemperature] : null;
   const status = BOOKING_STATUS_META[booking.status];
-  const isConfirming = confirmingId === booking.bookingId;
+  const isConfirmingCancel = confirming?.id === booking.bookingId && confirming.action === 'cancel';
+  const isConfirmingDone = confirming?.id === booking.bookingId && confirming.action === 'done';
+  const callHasStarted = new Date(booking.slotStartAt).getTime() <= now;
+  const clearConfirming = () => setConfirming(null);
 
   const rows = [
     { label: 'Phone', value: booking.candidate.phone, href: toTelLink(booking.candidate.phone) },
@@ -62,6 +71,17 @@ const CallPrepCard: FC<CallPrepCardProps> = ({ booking }) => {
         </Pill>
       </div>
 
+      {booking.status === 'completed' && booking.completedAt && (
+        <div className="mt-2.5 text-[13px] font-bold text-(--builder-blue-dark)">
+          Marked done {formatDayTime(booking.completedAt)}
+        </div>
+      )}
+      {booking.status === 'confirmed' && !callHasStarted && (
+        <div className="mt-2.5 text-[13px] font-bold text-(--builder-muted-light)">
+          You can mark this call as done once it has started.
+        </div>
+      )}
+
       <dl className="mt-4 grid grid-cols-[110px_1fr] gap-x-3 gap-y-2.5 border-t border-(--builder-border) pt-4">
         {rows.map((row) => (
           <div key={row.label} className="contents">
@@ -87,30 +107,73 @@ const CallPrepCard: FC<CallPrepCardProps> = ({ booking }) => {
           All answers →
         </Link>
 
-        {booking.status !== 'cancelled' && !isConfirming && (
+        {booking.status === 'confirmed' && !isConfirmingDone && !isConfirmingCancel && (
           <button
             type="button"
-            onClick={() => setConfirmingId(booking.bookingId)}
+            disabled={!callHasStarted}
+            onClick={() => setConfirming({ id: booking.bookingId, action: 'done' })}
+            className="min-h-11 cursor-pointer rounded-2xl bg-(--builder-blue) px-4 text-sm font-bold text-white transition hover:bg-(--builder-blue-dark) disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Mark call done
+          </button>
+        )}
+
+        {isConfirmingDone && (
+          <>
+            <button
+              type="button"
+              disabled={isCompleting}
+              onClick={() => completeBooking(booking.bookingId, { onSettled: clearConfirming })}
+              className="min-h-11 cursor-pointer rounded-2xl bg-(--builder-blue) px-4 text-sm font-bold text-white transition hover:bg-(--builder-blue-dark) disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isCompleting ? 'Saving...' : 'Yes, call is done'}
+            </button>
+            <button
+              type="button"
+              disabled={isCompleting}
+              onClick={clearConfirming}
+              className="min-h-11 cursor-pointer rounded-2xl border border-slate-300 bg-white px-4 text-sm font-bold text-(--builder-text)"
+            >
+              Not yet
+            </button>
+          </>
+        )}
+
+        {booking.status === 'completed' && (
+          <button
+            type="button"
+            disabled={isReopening}
+            onClick={() => undoComplete(booking.bookingId)}
+            className="min-h-11 cursor-pointer rounded-2xl border border-slate-300 bg-white px-4 text-sm font-bold text-(--builder-text) transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {isReopening ? 'Reopening...' : 'Undo: not done'}
+          </button>
+        )}
+
+        {(booking.status === 'confirmed' || booking.status === 'initiated') && !isConfirmingCancel && !isConfirmingDone && (
+          <button
+            type="button"
+            onClick={() => setConfirming({ id: booking.bookingId, action: 'cancel' })}
             className="min-h-11 cursor-pointer rounded-2xl border border-slate-300 bg-white px-4 text-sm font-bold text-(--builder-text) transition hover:border-slate-400"
           >
             Cancel booking
           </button>
         )}
 
-        {isConfirming && (
+        {isConfirmingCancel && (
           <>
             <button
               type="button"
-              disabled={isPending}
-              onClick={() => cancelBooking(booking.bookingId, { onSettled: () => setConfirmingId(null) })}
+              disabled={isCancelling}
+              onClick={() => cancelBooking(booking.bookingId, { onSettled: clearConfirming })}
               className="min-h-11 cursor-pointer rounded-2xl bg-red-700 px-4 text-sm font-bold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isPending ? 'Cancelling...' : 'Yes, cancel it'}
+              {isCancelling ? 'Cancelling...' : 'Yes, cancel it'}
             </button>
             <button
               type="button"
-              disabled={isPending}
-              onClick={() => setConfirmingId(null)}
+              disabled={isCancelling}
+              onClick={clearConfirming}
               className="min-h-11 cursor-pointer rounded-2xl border border-slate-300 bg-white px-4 text-sm font-bold text-(--builder-text)"
             >
               Keep booking

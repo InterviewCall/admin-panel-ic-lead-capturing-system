@@ -50,6 +50,7 @@ function getAllMockBookings(): BookingListItem[] {
                 bookingId,
                 slotStartAt: booking.slotStartAt,
                 status: cancelledBookingIds.has(bookingId) ? 'cancelled' : booking.status,
+                completedAt: booking.status === 'completed' ? booking.slotStartAt : null,
                 submissionId: item.publicId,
                 formName: item.formName,
                 candidate: item.candidate,
@@ -85,7 +86,7 @@ export function getMockBookingsWeek(weekStart: string): BookingsWeekResponse {
             const booking = bookingBySlot.get(new Date(slotStartAt).getTime());
 
             let status: SlotStatus = 'available';
-            if (booking && booking.status === 'confirmed') status = 'booked';
+            if (booking && (booking.status === 'confirmed' || booking.status === 'completed')) status = 'booked';
             else if (booking && booking.status === 'initiated') status = 'reserved';
             else if (forcedBlockedSlots.has(slotStartAt)) status = 'blocked';
             else if (isDefaultBlocked(date, hour) && !forcedOpenSlots.has(slotStartAt)) status = 'blocked';
@@ -101,7 +102,8 @@ export function getMockBookingsWeek(weekStart: string): BookingsWeekResponse {
     const usable = used + upcomingSlots.filter((slot) => slot.status === 'available').length;
     const today = toYmd(now);
 
-    const confirmed = weekBookings.filter((booking) => booking.status === 'confirmed');
+    const completed = weekBookings.filter((booking) => booking.status === 'completed');
+    const confirmed = weekBookings.filter((booking) => booking.status === 'confirmed' || booking.status === 'completed');
     const nextCall = confirmed.find((booking) => new Date(booking.slotStartAt).getTime() > now);
 
     return {
@@ -111,6 +113,8 @@ export function getMockBookingsWeek(weekStart: string): BookingsWeekResponse {
         summary: {
             callsToday: confirmed.filter((booking) => toYmd(booking.slotStartAt) === today).length,
             confirmedThisWeek: confirmed.length,
+            completedThisWeek: completed.length,
+            callsToMark: weekBookings.filter((booking) => booking.status === 'confirmed' && new Date(booking.slotStartAt).getTime() <= now).length,
             heldThisWeek: weekBookings.filter((booking) => booking.status === 'initiated').length,
             cancelledThisWeek: weekBookings.filter((booking) => booking.status === 'cancelled').length,
             capacityUsedPercent: usable === 0 ? 0 : Math.round((used / usable) * 100),

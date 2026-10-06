@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { FC } from 'react';
+import { useRouter } from 'next/navigation';
+import { FC, MouseEvent } from 'react';
 
 import { LoadingBlock, MessageBlock } from '@/components/ui/PageState';
 import Pill from '@/components/ui/Pill';
@@ -9,6 +10,7 @@ import { SUBMISSION_STATUS_META } from '@/constants/adminStatus';
 import { useSubmissionDetail } from '@/hooks/submissions/useSubmissionDetail';
 import { toWhatsAppLink } from '@/utils/helpers/contactLinks';
 import { getInitials } from '@/utils/helpers/notifications';
+import { recallSubmissionQuery } from '@/utils/helpers/submissionFilters';
 
 import AnswersPanel from './AnswersPanel';
 import { AttributionCard, BookingCard, CandidateCard } from './DetailInfoCards';
@@ -19,17 +21,29 @@ type SubmissionDetailViewProps = {
   submissionId: string;
 };
 
-const BackLink: FC = () => (
-  <Link href="/submissions" className="inline-flex min-h-11 w-fit items-center gap-1.5 font-black text-(--builder-muted) hover:text-(--builder-blue-dark)">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M15 18l-6-6 6-6" />
-    </svg>
-    All submissions
-  </Link>
-);
+const BackLink: FC = () => {
+  const router = useRouter();
+
+  // Go back to the list with the filters the user had, not the default view.
+  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey) return;
+
+    event.preventDefault();
+    router.push(`/submissions${recallSubmissionQuery()}`);
+  };
+
+  return (
+    <Link href="/submissions" onClick={handleClick} className="inline-flex min-h-11 w-fit items-center gap-1.5 font-black text-(--builder-muted) hover:text-(--builder-blue-dark)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+      All submissions
+    </Link>
+  );
+};
 
 const SubmissionDetailView: FC<SubmissionDetailViewProps> = ({ submissionId }) => {
-  const { data: detail, isPending, isError, refetch } = useSubmissionDetail(submissionId);
+  const { data: detail, isPending, isError, error, refetch } = useSubmissionDetail(submissionId);
 
   if (isPending) {
     return (
@@ -41,12 +55,18 @@ const SubmissionDetailView: FC<SubmissionDetailViewProps> = ({ submissionId }) =
   }
 
   if (isError || !detail) {
+    const isNotFound = error?.response?.status === 404;
+
     return (
       <>
         <BackLink />
         <MessageBlock
-          title="Submission not found"
-          description="It may have been deleted, or the link is wrong."
+          title={isNotFound ? 'Submission not found' : 'Could not load this submission'}
+          description={
+            isNotFound
+              ? 'It may have been deleted, or the link is wrong.'
+              : 'Something went wrong, or the candidate service is not reachable. Please try again.'
+          }
           action={
             <button
               type="button"

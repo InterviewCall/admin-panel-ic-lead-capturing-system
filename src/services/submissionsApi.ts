@@ -1,28 +1,41 @@
-import { getMockSubmissionDetail } from '@/mocks/submissionsData';
-import { queryMockSubmissions } from '@/mocks/submissionsQuery';
+import { apiClient } from '@/lib/apiClient';
+import { ApiSuccessResponse } from '@/types/response';
 import { SubmissionDetail, SubmissionFilters, SubmissionsListResponse } from '@/types/submission';
 
-const simulateLatency = (ms = 350) => new Promise((resolve) => setTimeout(resolve, ms));
+// The backend treats a missing filter as "all"/empty, so only the filters the user actually set are sent.
+// It also ignores a search shorter than 2 characters, so those are not sent either.
+function buildListParams(filters: SubmissionFilters): Record<string, string | number> {
+    const params: Record<string, string | number> = {
+        page: filters.page,
+        pageSize: filters.pageSize,
+        range: filters.range,
+    };
 
-/**
- * TODO(api): the backend is not ready, so these functions return dummy data from src/mocks.
- * When the endpoints are live, replace each body with the real call and delete src/mocks:
- *
- *   const response = await apiClient.get<...>('/admin/submissions', { params: filters });
- *   return response.data.data;
- */
-export async function getSubmissionsApi(filters: SubmissionFilters): Promise<SubmissionsListResponse> {
-    await simulateLatency();
-    return queryMockSubmissions(filters);
+    if (filters.status !== 'all') params.status = filters.status;
+    if (filters.temperature !== 'all') params.temperature = filters.temperature;
+    if (filters.formSlug !== 'all') params.formSlug = filters.formSlug;
+    if (filters.source !== 'all') params.source = filters.source;
+
+    const search = filters.search.trim();
+    if (search.length >= 2) params.search = search;
+
+    return params;
 }
 
+// GET /admin/submissions (S1): list rows, summary cards, tab counts and the source dropdown in one response.
+export async function getSubmissionsApi(filters: SubmissionFilters): Promise<SubmissionsListResponse> {
+    const response = await apiClient.get<ApiSuccessResponse<SubmissionsListResponse>>('/admin/submissions', {
+        params: buildListParams(filters),
+    });
+
+    return response.data.data;
+}
+
+// GET /admin/submissions/:publicId (S2): everything for the detail page. Answers already carry option labels, not stored values.
 export async function getSubmissionDetailApi(submissionId: string): Promise<SubmissionDetail> {
-    await simulateLatency();
+    const response = await apiClient.get<ApiSuccessResponse<SubmissionDetail>>(
+        `/admin/submissions/${encodeURIComponent(submissionId)}`,
+    );
 
-    const detail = getMockSubmissionDetail(submissionId);
-    if (!detail) {
-        throw new Error('Submission not found');
-    }
-
-    return detail;
+    return response.data.data;
 }

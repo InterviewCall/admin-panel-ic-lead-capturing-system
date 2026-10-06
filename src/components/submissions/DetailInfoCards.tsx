@@ -52,10 +52,12 @@ export const BookingCard: FC<{ detail: SubmissionDetail }> = ({ detail }) => {
         <>
           <div className="text-[22px] font-black tracking-[-0.5px]">{formatSlot(booking.slotStartAt)}</div>
           <div className="font-semibold text-(--builder-muted)">
-            {booking.status === 'cancelled' ? 'Cancelled' : formatUntil(booking.slotStartAt)} · booking{' '}
+            {booking.status === 'cancelled' ? 'Cancelled' : booking.status === 'completed' ? 'Call completed' : formatUntil(booking.slotStartAt)} · booking{' '}
             <span className="font-mono text-[13px]">#{booking.bookingId}</span>
           </div>
         </>
+      ) : detail.warnings?.length ? (
+        <div className="text-sm font-semibold text-(--builder-muted)">Booking details are temporarily unavailable. Try again in a moment.</div>
       ) : (
         <div className="text-sm font-semibold text-(--builder-muted)">
           {detail.status === 'submission_pending' ? 'The form was not submitted, so there is nothing to book yet.' : 'No slot booked yet.'}

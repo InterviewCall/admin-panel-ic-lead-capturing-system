@@ -1,6 +1,7 @@
 import type { LeadTemperature } from '@/types/submission';
 
-export type BookingStatus = 'confirmed' | 'initiated' | 'cancelled';
+// 'completed' means the admin marked the counselling call as done.
+export type BookingStatus = 'confirmed' | 'initiated' | 'cancelled' | 'completed';
 
 export type SlotStatus = 'available' | 'booked' | 'reserved' | 'blocked';
 
@@ -24,6 +25,7 @@ export type BookingListItem = {
     bookingId: string;
     slotStartAt: string;
     status: BookingStatus;
+    completedAt: string | null;
     submissionId: string;
     formName: string;
     candidate: {
@@ -56,6 +58,9 @@ export type WeekDay = {
 export type BookingsWeekSummary = {
     callsToday: number;
     confirmedThisWeek: number;
+    completedThisWeek: number;
+    // Confirmed calls whose time has come but that nobody marked as done yet.
+    callsToMark: number;
     heldThisWeek: number;
     cancelledThisWeek: number;
     capacityUsedPercent: number;
@@ -68,4 +73,13 @@ export type BookingsWeekResponse = {
     bookings: BookingListItem[];
     days: WeekDay[];
     summary: BookingsWeekSummary;
+    // Set when part of the page could not be filled in, e.g. ['notification-service unavailable'].
+    warnings?: string[];
+};
+
+// Answer of marking a call done / undoing it.
+export type BookingCompletionResponse = {
+    bookingId: string;
+    status: BookingStatus;
+    completedAt: string | null;
 };

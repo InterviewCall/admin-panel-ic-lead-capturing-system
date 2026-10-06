@@ -151,20 +151,29 @@ function buildTimeline(seed: Seed, item: SubmissionListItem): TimelineEvent[] {
     const hasBooking = item.booking !== null;
     const isConfirmed = hasBooking && item.booking?.status !== 'initiated';
 
+    const step = (key: string, label: string, at: string | null): TimelineEvent => ({ key, label, at, done: at !== null });
+
     const events: TimelineEvent[] = [
-        { key: 'started', label: 'Form started', at: item.createdAt },
-        { key: 'submitted', label: 'Form submitted', at: submittedAt },
-        { key: 'reserved', label: 'Slot reserved', at: submittedAt && hasBooking ? addMinutes(submittedAt, 1) : null },
-        { key: 'confirmed', label: 'Booking confirmed', at: submittedAt && isConfirmed ? addMinutes(submittedAt, 2) : null },
+        step('started', 'Form started', item.createdAt),
+        step('submitted', 'Form submitted', submittedAt),
+        step('reserved', 'Slot reserved', submittedAt && hasBooking ? addMinutes(submittedAt, 1) : null),
+        step('confirmed', 'Booking confirmed', submittedAt && isConfirmed ? addMinutes(submittedAt, 2) : null),
     ];
 
     if (item.booking?.status === 'cancelled') {
-        events.push({ key: 'cancelled', label: 'Booking cancelled', at: addMinutes(item.booking.slotStartAt, -24 * 60) });
+        events.push(step('cancelled', 'Booking cancelled', addMinutes(item.booking.slotStartAt, -24 * 60)));
     } else {
-        events.push({ key: 'call', label: 'Counselling call', at: item.booking && isConfirmed ? item.booking.slotStartAt : null });
+        events.push({
+            key: 'call',
+            label: 'Counselling call',
+            at: item.booking && isConfirmed ? item.booking.slotStartAt : null,
+            done: item.booking?.status === 'completed',
+        });
     }
 
-    return events.map((event) => (seed.status === 'submission_pending' && event.key !== 'started' ? { ...event, at: null } : event));
+    return events.map((event) =>
+        seed.status === 'submission_pending' && event.key !== 'started' ? { ...event, at: null, done: false } : event,
+    );
 }
 
 export function getMockSubmissionDetail(publicId: string): SubmissionDetail | null {
@@ -190,7 +199,7 @@ export function getMockSubmissionDetail(publicId: string): SubmissionDetail | nu
         scoredQuestionCount,
         timeline: buildTimeline(seed, item),
         bookingDetails: item.booking
-            ? { bookingId: bookingIdFor(seed.n), slotStartAt: item.booking.slotStartAt, status: item.booking.status }
+            ? { bookingId: bookingIdFor(seed.n), slotStartAt: item.booking.slotStartAt, status: item.booking.status, completedAt: null }
             : null,
         notifications: buildNotifications(seed),
     };

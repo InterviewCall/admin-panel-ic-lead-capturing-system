@@ -27,7 +27,7 @@ const BookingsView: FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('agenda');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const { data, isPending, isError, refetch } = useBookingsWeek(weekStart);
+  const { data, isPending, isError, error, refetch } = useBookingsWeek(weekStart);
 
   const weekEnd = addDaysToYmd(weekStart, 6);
   const now = useNow();
@@ -38,7 +38,7 @@ const BookingsView: FC = () => {
     data?.bookings.find((booking) => booking.bookingId === selectedId) ?? firstUpcoming ?? data?.bookings[0] ?? null;
 
   const summary = data?.summary;
-  const needsAttention = summary ? summary.failedMessages + summary.heldThisWeek : 0;
+  const needsAttention = summary ? summary.failedMessages + summary.heldThisWeek + summary.callsToMark : 0;
 
   return (
     <>
@@ -107,7 +107,7 @@ const BookingsView: FC = () => {
         <StatCard
           label="Confirmed this week"
           value={summary ? String(summary.confirmedThisWeek) : '—'}
-          note={summary ? `${summary.heldThisWeek} held, ${summary.cancelledThisWeek} cancelled` : ''}
+          note={summary ? `${summary.completedThisWeek} done, ${summary.heldThisWeek} held, ${summary.cancelledThisWeek} cancelled` : ''}
         />
         <StatCard
           label="Week capacity used"
@@ -117,7 +117,11 @@ const BookingsView: FC = () => {
         <StatCard
           label="Needs attention"
           value={summary ? String(needsAttention) : '—'}
-          note={summary ? `${summary.failedMessages} failed message, ${summary.heldThisWeek} unconfirmed slot` : ''}
+          note={
+            summary
+              ? `${summary.failedMessages} failed message, ${summary.heldThisWeek} unconfirmed slot, ${summary.callsToMark} to mark done`
+              : ''
+          }
         />
       </section>
 
@@ -126,7 +130,10 @@ const BookingsView: FC = () => {
       {isError && (
         <MessageBlock
           title="Could not load bookings"
-          description="Something went wrong while fetching this week."
+          description={
+            error?.response?.data?.message ??
+            (error?.response ? 'Something went wrong while fetching this week.' : 'Could not reach the server. Check that the booking service is running.')
+          }
           action={
             <button
               type="button"
@@ -137,6 +144,12 @@ const BookingsView: FC = () => {
             </button>
           }
         />
+      )}
+
+      {data?.warnings && data.warnings.length > 0 && (
+        <div role="status" className="rounded-2xl bg-orange-50 px-3.5 py-2.5 text-[13px] font-bold text-orange-800">
+          Message status is temporarily unavailable, so delivery details may be missing. Try again in a moment.
+        </div>
       )}
 
       {data && (

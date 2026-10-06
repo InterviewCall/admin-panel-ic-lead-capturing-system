@@ -18,7 +18,12 @@ function getBookedCall(item: SubmissionListItem): { title: string; note: string 
   }
 
   if (item.booking) {
-    const notes = { confirmed: 'Confirmed', initiated: 'Slot held, not confirmed', cancelled: 'Booking cancelled' };
+    const notes = {
+      confirmed: 'Confirmed',
+      initiated: 'Slot held, not confirmed',
+      cancelled: 'Booking cancelled',
+      completed: 'Call completed',
+    };
     return { title: formatSlot(item.booking.slotStartAt), note: notes[item.booking.status] };
   }
 
@@ -26,7 +31,12 @@ function getBookedCall(item: SubmissionListItem): { title: string; note: string 
     return { title: 'Not booked', note: `${item.reminderCount} of ${MAX_REMINDERS} reminders sent` };
   }
 
-  return { title: '—', note: 'Left before submitting' };
+  if (item.status === 'submission_pending') {
+    return { title: '—', note: 'Left before submitting' };
+  }
+
+  // Booked, converted or cancelled, but the booking service lookup is not connected yet, so there is no slot time to show.
+  return { title: '—', note: 'Slot time unavailable' };
 }
 
 type SubmissionsTableProps = {

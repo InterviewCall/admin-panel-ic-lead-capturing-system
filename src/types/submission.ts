@@ -61,6 +61,8 @@ export type SubmissionsListResponse = {
     totalItems: number;
     summary: SubmissionsSummary;
     availableSources: string[];
+    // Set when part of the page could not be filled in, e.g. ['booking-service unavailable'].
+    warnings?: string[];
 };
 
 export type SubmissionAnswer = {
@@ -81,6 +83,8 @@ export type TimelineEvent = {
     key: string;
     label: string;
     at: string | null;
+    // Decided by the server, not the clock: the counselling call is done only after the admin marks it.
+    done: boolean;
 };
 
 export type SubmissionDetail = SubmissionListItem & {
@@ -101,6 +105,9 @@ export type SubmissionDetail = SubmissionListItem & {
         bookingId: string;
         slotStartAt: string;
         status: BookingStatus;
+        completedAt: string | null;
     } | null;
     notifications: NotificationItem[];
+    // Set when part of the page could not be filled in, e.g. ['booking-service unavailable'].
+    warnings?: string[];
 };
