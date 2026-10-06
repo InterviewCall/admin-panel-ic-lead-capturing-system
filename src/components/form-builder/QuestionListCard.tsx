@@ -95,9 +95,9 @@ const QuestionListCard: FC<QuestionListCardProps> = ({
                               Key: {question.questionKey}
                             </p>
 
-                            {question.helperText && (
+                            {question.placeholder && (
                               <p className="mt-2 text-sm font-semibold text-(--builder-muted)">
-                                {question.helperText}
+                                {question.placeholder}
                               </p>
                             )}
                           </div>
