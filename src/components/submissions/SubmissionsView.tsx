@@ -17,6 +17,15 @@ import SubmissionsTable from './SubmissionsTable';
 import SubmissionStatusTabs from './SubmissionStatusTabs';
 
 const SubmissionsView: FC = () => {
+  const [userRole, setUserRole] = useState<'ADMIN' | 'MANAGER' | null>(null);
+
+  useEffect(() => {
+      const role = sessionStorage.getItem('user-role');
+
+      if (role === 'ADMIN' || role === 'MANAGER') {
+          setUserRole(role);
+      }
+  }, []);
   const { filters, updateFilters } = useSubmissionFilters();
 
   // The search box keeps its own text so typing stays instant; the URL (and the request) follow 300ms later.
@@ -89,15 +98,17 @@ const SubmissionsView: FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-2.5">
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={!data || data.items.length === 0}
-            title="Exports the rows on this page"
-            className="min-h-11 cursor-pointer rounded-2xl border border-slate-300 bg-white px-4.5 text-sm font-bold text-(--builder-text) transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Export CSV
-          </button>
+          {userRole === 'ADMIN' && (
+              <button
+                  type="button"
+                  onClick={handleExport}
+                  disabled={!data || data.items.length === 0}
+                  title="Exports the rows on this page"
+                  className="min-h-11 cursor-pointer rounded-2xl border border-slate-300 bg-white px-4.5 text-sm font-bold text-(--builder-text) transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                  Export CSV
+              </button>
+          )}
           <button
             type="button"
             onClick={() => refetch()}

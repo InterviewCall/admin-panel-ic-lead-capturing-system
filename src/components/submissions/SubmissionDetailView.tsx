@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FC, MouseEvent } from 'react';
+import { FC, MouseEvent ,useEffect, useState} from 'react';
 
 import { LoadingBlock, MessageBlock } from '@/components/ui/PageState';
 import Pill from '@/components/ui/Pill';
@@ -43,6 +43,15 @@ const BackLink: FC = () => {
 };
 
 const SubmissionDetailView: FC<SubmissionDetailViewProps> = ({ submissionId }) => {
+  const [userRole, setUserRole] = useState<'ADMIN' | 'MANAGER' | null>(null);
+
+  useEffect(() => {
+      const role = sessionStorage.getItem('user-role');
+
+      if (role === 'ADMIN' || role === 'MANAGER') {
+          setUserRole(role);
+      }
+  }, []);
   const { data: detail, isPending, isError, error, refetch } = useSubmissionDetail(submissionId);
 
   if (isPending) {
@@ -102,24 +111,28 @@ const SubmissionDetailView: FC<SubmissionDetailViewProps> = ({ submissionId }) =
             {status.label}
           </Pill>
         </div>
+          
 
-        <div className="flex flex-wrap gap-2.5">
-          <a
-            href={`mailto:${detail.candidate.email}`}
-            className="inline-flex min-h-11 items-center rounded-2xl border border-slate-300 bg-white px-4.5 text-sm font-bold text-(--builder-text) transition hover:border-slate-400"
-          >
-            Email
-          </a>
-          <a
-            href={toWhatsAppLink(detail.candidate.phone)}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex min-h-11 items-center rounded-2xl bg-(--builder-blue) px-4.5 text-sm font-bold text-white transition hover:bg-(--builder-blue-dark)"
-          >
-            Message on WhatsApp
-          </a>
+        {userRole === 'ADMIN' && (
+          <div className="flex flex-wrap gap-2.5">
+            <a
+              href={`mailto:${detail.candidate.email}`}
+              className="inline-flex min-h-11 items-center rounded-2xl border border-slate-300 bg-white px-4.5 text-sm font-bold text-(--builder-text) transition hover:border-slate-400"
+            >
+              Email
+            </a>
+            <a
+              href={toWhatsAppLink(detail.candidate.phone)}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center rounded-2xl bg-(--builder-blue) px-4.5 text-sm font-bold text-white transition hover:bg-(--builder-blue-dark)"
+            >
+              Message on WhatsApp
+            </a>
+          </div>
+          )}
         </div>
-      </div>
+      
 
       <SubmissionTimeline events={detail.timeline} />
 
